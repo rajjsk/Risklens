@@ -75,10 +75,11 @@ C:\Program Files\Tesseract-OCR\
 
 
 Ensure available languages:
-
+```text
 tessdata/
 ├── eng.traineddata
 ├── mar.traineddata
+```
 
 # ▶️ Run the Application
 ## 🔹 Streamlit UI (Recommended)
