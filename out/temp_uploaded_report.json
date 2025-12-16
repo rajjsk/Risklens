@@ -1,0 +1,20 @@
+{
+  "contract_risk_score": 88,
+  "clauses": [
+    {
+      "title": null,
+      "body": "Dummy Service Agreement\n1. Scope of Services\nThe Service Provider agrees to deliver the services as described in Schedule A in a professional\nand timely manner, adhering to industry best practices.\n2. Payment Terms\nThe Client shall pay the Service Provider within 30 days of receipt of a valid invoice. Late payments\nmay incur interest at a reasonable rate not exceeding applicable law.\n3. Termination Without Cause\nThe Client may terminate this Agreement at any time without notice or compensation, and the\nService Provider shall not be entitled to any pending or future payments.\n4. Unlimited Liability\nThe Service Provider shall be liable for any and all damages, losses, or claims arising out of this\nAgreement, without any limitation of liability.\n5. Confidentiality\nBoth parties agree to maintain the confidentiality of all proprietary or sensitive information\nexchanged under this Agreement.\n6. Governing Law\nThis Agreement shall be governed by and construed in accordance with the laws of India.",
+      "label": "Confidentiality",
+      "label_score": 0.26094457507133484,
+      "fields": {
+        "dates": [
+          "30 days"
+        ],
+        "money": [],
+        "notice_periods": [
+          "30 days"
+        ]
+      }
+    }
+  ]
+}
