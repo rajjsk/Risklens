@@ -55,7 +55,7 @@ RiskLens/
 ├── requirements.txt
 ├── README.md
 └── out/                   # Output files
-```text
+```
 
 # ⚙️ Setup Instructions
 ## 1️⃣ Create Conda Environment
