@@ -37,23 +37,25 @@ Environment: Conda
 
 Deployment Ready: Local / Cloud (GCP, AWS)
 
-📂 Project Structure
+## 📂 Project Structure
+
+```text
 RiskLens/
-│
 ├── app/
 │   ├── pdf_utils.py        # PDF text extraction & annotation
 │   ├── ocr_utils.py        # OCR utilities (Tesseract)
-│   ├── segmentation.py    # Clause segmentation logic
+│   ├── segmentation.py    # Clause segmentation
 │   ├── classify.py        # Zero-shot classifier
 │   ├── extractor.py       # Field extraction
 │   ├── rules.py           # Risk scoring logic
-│   └── report.py          # JSON report generation
+│   └── report.py          # Report generation
 │
-├── streamlit_app.py        # Streamlit UI
-├── main.py                 # CLI entry point
+├── streamlit_app.py       # Streamlit UI
+├── main.py                # CLI entry point
 ├── requirements.txt
 ├── README.md
-└── out/                    # Generated reports & annotated PDFs
+└── out/                   # Output files
+
 
 # ⚙️ Setup Instructions
 ## 1️⃣ Create Conda Environment
