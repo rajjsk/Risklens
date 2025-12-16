@@ -1,9 +1,9 @@
-📄 RiskLens – AI-Powered Contract Risk Analyzer
+# 📄 RiskLens – AI-Powered Contract Risk Analyzer
 
 RiskLens is an AI-driven contract analysis system that extracts text from PDFs using OCR, identifies contractual clauses, classifies legal risk, and generates an annotated risk report.
 It supports English and Marathi contracts and provides a Streamlit-based UI for interactive analysis.
 
-🚀 Features
+# 🚀 Features
 
 📑 PDF Contract Processing
 
@@ -21,7 +21,7 @@ It supports English and Marathi contracts and provides a Streamlit-based UI for 
 
 🖥️ Interactive Streamlit UI
 
-🛠️ Tech Stack
+# 🛠️ Tech Stack
 
 Programming Language: Python 3.10+
 
@@ -55,15 +55,15 @@ RiskLens/
 ├── README.md
 └── out/                    # Generated reports & annotated PDFs
 
-⚙️ Setup Instructions
-1️⃣ Create Conda Environment
+# ⚙️ Setup Instructions
+## 1️⃣ Create Conda Environment
 conda create -n risklens python=3.10 -y
 conda activate risklens
 
-2️⃣ Install Dependencies
+## 2️⃣ Install Dependencies
 pip install -r requirements.txt
 
-3️⃣ Install Tesseract OCR (Windows)
+## 3️⃣ Install Tesseract OCR (Windows)
 
 Download: https://github.com/UB-Mannheim/tesseract/wiki
 
@@ -78,8 +78,8 @@ tessdata/
 ├── eng.traineddata
 ├── mar.traineddata
 
-▶️ Run the Application
-🔹 Streamlit UI (Recommended)
+# ▶️ Run the Application
+## 🔹 Streamlit UI (Recommended)
 streamlit run streamlit_app.py
 
 
@@ -91,28 +91,28 @@ Click Run Analysis
 
 Download annotated PDF & view risk scores
 
-🔹 CLI Mode
+## 🔹 CLI Mode
 python main.py --input contract.pdf --output out --lang eng
 
-📊 Output
+# 📊 Output
 
-✅ Risk Score (0–100)
+### ✅ Risk Score (0–100)
 
-📑 Clause-level Classification
+### 📑 Clause-level Classification
 
-⚠️ Highlighted Risky Clauses
+### ⚠️ Highlighted Risky Clauses
 
-📄 Annotated PDF
+### 📄 Annotated PDF
 
-📁 JSON Risk Report
+### 📁 JSON Risk Report
 
-🧠 Risk Scoring Logic
+## 🧠 Risk Scoring Logic
 Risk Level	Color
 Low	🟢 Green
 Medium	🟡 Yellow
 High	🟠 Orange
 Critical	🔴 Red
-🎯 Use Cases
+# 🎯 Use Cases
 
 Legal Contract Review
 
@@ -124,7 +124,7 @@ Legal Tech Demonstrations
 
 Resume & Portfolio Projects
 
-🔮 Future Enhancements
+# 🔮 Future Enhancements
 
 Multi-page clause-to-page mapping
 
