@@ -1,30 +1,11 @@
 import streamlit as st
-from pathlib import Path
-import json
-import pytesseract
-import os
-import logging
-import warnings
-import tensorflow as tf
+import pandas as pd
+import plotly.graph_objects as go
 
-from main import process, risk_color
+from main import process_contract_score   # adjust if filename differs
 
-# -------------------------------
-# Explicit Tesseract configuration
-# -------------------------------
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-os.environ["TESSDATA_PREFIX"] = r"C:\Program Files\Tesseract-OCR\tessdata"
 
-# -------------------------------
-# Suppress noisy warnings
-# -------------------------------
-tf.get_logger().setLevel("ERROR")
-logging.getLogger("transformers").setLevel(logging.ERROR)
-warnings.filterwarnings("ignore")
-
-# -------------------------------
-# Streamlit UI
-# -------------------------------
+# ---------------- Page Config ----------------
 st.set_page_config(
     page_title="RiskLens - Contract Risk Analyzer",
     layout="wide"
@@ -32,100 +13,94 @@ st.set_page_config(
 
 st.title("📄 RiskLens – AI Contract Risk Analyzer")
 
-st.markdown(
-    """
-Upload a contract PDF and analyze legal risk using AI.
-Supports **English** and **Marathi** documents.
-"""
+
+# ---------------- File Upload ----------------
+uploaded_file = st.file_uploader(
+    "Upload Contract PDF",
+    type=["pdf"]
 )
 
-# -------------------------------
-# Inputs
-# -------------------------------
-pdf_file = st.file_uploader("Upload Contract PDF", type=["pdf"])
-lang = st.selectbox("OCR Language", ["eng", "mar"], index=0)
+if uploaded_file:
+    with open("temp_contract.pdf", "wb") as f:
+        f.write(uploaded_file.read())
 
-# -------------------------------
-# Processing
-# -------------------------------
-if pdf_file:
-    output_dir = Path("out")
-    output_dir.mkdir(exist_ok=True)
+    with st.spinner("🔍 Analyzing contract..."):
+        party_1_df,party_2_df, final_risk_score, risk_level, risky_clause_table = process_contract_score(
+            "temp_contract.pdf"
+        )
 
-    temp_pdf = Path("temp_uploaded.pdf")
-    with open(temp_pdf, "wb") as f:
-        f.write(pdf_file.getbuffer())
+    st.success("✅ Analysis completed!")
 
-    if st.button("🚀 Run Analysis"):
-        with st.spinner("Processing contract..."):
-            try:
-                process(str(temp_pdf), str(output_dir), lang)
 
-                report_file = output_dir / f"{temp_pdf.stem}_report.json"
+    # ---------------- Parties Section ----------------
+    st.subheader("👥 Contract Parties")
 
-                if report_file.exists():
-                    with open(report_file, "r", encoding="utf-8") as f:
-                        report = json.load(f)
+    col1, col2 = st.columns(2)
 
-                    # -------------------------------
-                    # Contract Risk Score
-                    # -------------------------------
-                    contract_score = report.get("contract_risk_score", 0)
-                    st.metric(
-                        label="📊 Contract Risk Score",
-                        value=f"{contract_score} / 100"
-                    )
+    with col1:
+        st.markdown("### 🧑 Party 1")
+        if party_1_df is not None and not party_1_df.empty:
+            st.dataframe(pd.DataFrame(party_1_df), use_container_width=True)
+        else:
+            st.warning("⚠️ Party 1 not detected")
 
-                    st.divider()
+    with col2:
+        st.markdown("### 🧑 Party 2")
+        if party_2_df is not None and not party_2_df.empty:
+            st.dataframe(pd.DataFrame(party_2_df), use_container_width=True)
+        else:
+            st.warning("⚠️ Party 2 not detected")
 
-                    # -------------------------------
-                    # Clause-level breakdown
-                    # -------------------------------
-                    st.subheader("Clause Risk Analysis")
 
-                    for clause in report.get("clauses", []):
-                        title = clause.get("title") or "Clause"
-                        body = clause.get("body", "")
-                        label = clause.get("label", "Unknown")
-                        score = clause.get("label_score", 0.0)
-                        fields = clause.get("fields", {})
+    # ---------------- Risk Meter ----------------
+    st.subheader("⚠️ Contract Risk Assessment")
 
-                        score_pct = int(score * 100)
-                        rgb = risk_color(score_pct)
-                        color_hex = "#%02x%02x%02x" % tuple(int(c * 255) for c in rgb)
+    def risk_color(level):
+        if level.lower() == "low":
+            return "green"
+        elif level.lower() == "medium":
+            return "orange"
+        return "red"
 
-                        with st.expander(f"{title} — {label} ({score_pct}%)"):
-                            st.markdown(
-                                f"""
-                                <div style="
-                                    background-color:{color_hex};
-                                    padding:12px;
-                                    border-radius:6px;
-                                    color:black;
-                                ">
-                                {body}
-                                </div>
-                                """,
-                                unsafe_allow_html=True
-                            )
+    gauge = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=final_risk_score,
+        number={"suffix": " / 10"},
+        gauge={
+            "axis": {"range": [1, 10]},
+            "bar": {"color": risk_color(risk_level)},
+            "steps": [
+                {"range": [1, 3.9], "color": "lightgreen"},
+                {"range": [4, 6.9], "color": "orange"},
+                {"range": [7, 10], "color": "lightcoral"},
+            ],
+            "threshold": {
+                "line": {"color": "black", "width": 4},
+                "thickness": 0.75,
+                "value": final_risk_score,
+            },
+        },
+        title={"text": "Overall Contract Risk"}
+    ))
 
-                            if fields:
-                                st.markdown("**Extracted Fields**")
-                                st.json(fields)
+    st.plotly_chart(gauge, use_container_width=True)
 
-                # -------------------------------
-                # Annotated PDF Download
-                # -------------------------------
-                annotated_pdf = output_dir / f"annotated_{temp_pdf.stem}.pdf"
-                if annotated_pdf.exists():
-                    st.download_button(
-                        label="📥 Download Annotated PDF",
-                        data=annotated_pdf.read_bytes(),
-                        file_name=annotated_pdf.name,
-                        mime="application/pdf"
-                    )
+    st.markdown(
+        f"### Risk Level: "
+        f"<span style='color:{risk_color(risk_level)}; font-weight:bold;'>"
+        f"{risk_level.upper()}</span>",
+        unsafe_allow_html=True
+    )
 
-                st.success("✅ Contract processed successfully")
 
-            except Exception as e:
-                st.error(f"❌ Error processing the PDF: {e}")
+    # ---------------- Risky Clauses ----------------
+    st.subheader("🚨 Risky Clauses")
+
+    if risky_clause_table is not None and not risky_clause_table.empty:
+        st.dataframe(risky_clause_table, use_container_width=True)
+    else:
+        st.info("✅ No risky clauses found")
+
+
+else:
+    st.info("📂 Please upload a contract PDF to begin analysis.")

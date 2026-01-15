@@ -1,0 +1,106 @@
+import re
+from typing import List, Tuple, Dict, Optional
+
+# --- Extract single entity ---
+def extract_entity(block: str) -> Optional[Dict[str, Optional[str]]]:
+    if not block or not block.strip():
+        return None
+    block = block.strip()
+    
+    # Name
+    name_match = re.search(r'Name\s*:\s*([^,]+)', block)
+    name = name_match.group(1).strip() if name_match else None
+    if not name:
+        return None
+
+    # PAN
+    pan_match = re.search(r'\bPAN\s*:\s*([A-Z]{5}[0-9]{4}[A-Z])', block)
+    pan = pan_match.group(1) if pan_match else None
+
+    # Address
+    address_match = re.search(
+        r'(?:residing|resident|address|situated|located|having)\s*(?:at\s*:)?\s*(?P<addr>.*?)(?=\bPAN\b|\bAge\b|\bHEREINAFTER\b|\bName\b|$)',
+        block,
+        re.IGNORECASE | re.DOTALL
+    )
+    address = address_match.group("addr").replace('\n', ' ').strip() if address_match else None
+
+    return {"name": name, "pan": pan, "address": address}
+
+
+# --- Detect role blocks dynamically ---
+def detect_role_blocks(text: str) -> List[Tuple[str, List[str]]]:
+    """
+    Returns list of tuples: (role_name, list_of_person_blocks)
+    """
+    role_pattern = re.compile(
+        r'(.*?)(?:HEREINAFTER called\s+[‘\'"]?the\s+(?P<role>\w+))',
+        re.DOTALL | re.IGNORECASE
+    )
+
+    blocks = []
+    for match in role_pattern.finditer(text):
+        block_text = match.group(1).strip()
+        role = match.group('role').capitalize()
+
+        # Split multiple persons (by numbering)
+        person_blocks = re.split(r'\d\)\s*Name\s*:', block_text)
+        cleaned_blocks = []
+        for i, p in enumerate(person_blocks):
+            if i == 0 and not p.strip().startswith('Name'):
+                p = 'Name: ' + p.strip()
+            elif i > 0:
+                p = 'Name: ' + p.strip()
+            if p.strip():
+                cleaned_blocks.append(p.strip())
+
+        if cleaned_blocks:
+            blocks.append((role, cleaned_blocks))
+
+    return blocks
+
+
+# --- Extract fixed party_1 and party_2 ---
+def extract_parties(text: str) -> Tuple[List[Dict[str, Optional[str]]], List[Dict[str, Optional[str]]]]:
+    """
+    Extracts parties from contract text and returns:
+    party_1: single member (e.g., Licensor)
+    party_2: multiple members (e.g., Licensees)
+    """
+    role_blocks = detect_role_blocks(text)
+    print(role_blocks)
+    party_1 = []
+    party_2 = []
+
+    for i, (role, person_blocks) in enumerate(role_blocks):
+        entities = []
+        for pb in person_blocks:
+            entity = extract_entity(pb)
+            if entity:
+                entity["Role"] = role.lower()
+                entities.append(entity)
+        
+        # Assign to fixed party_1 or party_2
+        if i == 0:
+            party_1.extend(entities[:1])  # Only first entity
+        elif i == 1:
+            party_2.extend(entities)      # All remaining entities
+
+    return party_1, party_2
+
+
+# --- Example usage ---
+text = """
+This agreement is made and executed on 08/09/2024 at Pune Between, 1) Name: Mrs Vashindi Vaman, Age : About 30 Years, Occupation : Service, PAN : AKKKV4444K Residing at: Flat No:M7-A-103, Floor No:1st, Building Name: Republic India, Block Sector:Jambe, Road:M G Road, MaraN, PHATAN, Maharashtra, 500600 HEREINAFTER called ‘the Licensor (which expression shall mean and include the Licensor above named and also his/her/their respective heirs, successors, assigns, executors and administrators) 
+AND 1) Name: Mr.Ravi Kumar, Age : About 25 Years, Occupation : Service, PAN : IEEEK5555M Residing at: Block Sector:MRIDDIL, Road:Sukeli, Thane, Thane, Maharashtra, 400500 2) Name: Miss Hriii Maitra, Age : About 20 Years, Occupation : Service, PAN : JJJFM7755K Residing at: Block Sector:Near Swami School, Road:B S  Marg, Sector 26, Vaman, Mumbai, Thane, Maharashtra, 400003 HEREINAFTER called ‘the Licensees’ (which expression shall mean and include only Licensees above named).
+
+"""
+party_1, party_2 = extract_parties(text)
+
+print("Party 1:")
+for p in party_1:
+    print("-", p)
+
+print("\nParty 2:")
+for p in party_2:
+    print("-", p)

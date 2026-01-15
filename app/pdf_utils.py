@@ -28,3 +28,9 @@ def annotate_pdf(input_pdf:str, highlights:list, output_pdf:str):
         highlight.set_colors(stroke=h.get('color',(1,0,0)))
         highlight.update()
     doc.save(output_pdf)
+
+if __name__=="__main__":
+    pdf_path=r"C:\Users\Raj\Downloads\Dummy_Contract_No_Clause_Type.pdf"
+    pages = extract_text_pages(pdf_path)
+    print(pages)
+    
